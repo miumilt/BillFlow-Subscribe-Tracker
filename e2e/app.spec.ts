@@ -8,7 +8,8 @@ test('App loads successfully', async ({ page }) => {
 test('Shows Telegram auth message when not in Telegram', async ({ page }) => {
   // Remove Telegram mock
   await page.addInitScript(() => {
-    delete (window as any).Telegram
+    const telegramWindow = window as Window & { Telegram?: unknown }
+    delete telegramWindow.Telegram
   })
   
   await page.goto('/')

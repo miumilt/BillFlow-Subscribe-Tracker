@@ -52,7 +52,7 @@ interface ToastActionProps extends React.ButtonHTMLAttributes<HTMLButtonElement>
 }
 
 const ToastAction = React.forwardRef<HTMLButtonElement, ToastActionProps>(
-  ({ className, altText, ...props }, ref) => {
+  ({ className, altText: _altText, ...props }, ref) => {
     return (
       <button
         ref={ref}

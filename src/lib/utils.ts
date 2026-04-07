@@ -85,7 +85,7 @@ export function getNextPaymentDate(
 ): Date {
   const start = new Date(startDate)
   const now = new Date()
-  let next = new Date(start)
+  const next = new Date(start)
 
   while (next <= now) {
     switch (billingCycle) {
