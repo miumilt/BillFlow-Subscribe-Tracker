@@ -2,128 +2,103 @@
 
 # BillFlow
 
-Telegram Mini App portfolio project for subscription tracking with a polished green dashboard UI, animated widgets, and offline-first persistence.
+Polished Telegram Mini App portfolio project for subscription tracking, built with a 2026-style neon green dashboard, animated widgets, and offline-first persistence.
 
 <p>
-  <img src="https://img.shields.io/badge/React-18-111827?style=for-the-badge&logo=react" alt="React" />
-  <img src="https://img.shields.io/badge/Vite-5-111827?style=for-the-badge&logo=vite" alt="Vite" />
-  <img src="https://img.shields.io/badge/Tailwind-3.4-111827?style=for-the-badge&logo=tailwindcss" alt="Tailwind" />
-  <img src="https://img.shields.io/badge/TypeScript-5-111827?style=for-the-badge&logo=typescript" alt="TypeScript" />
-  <img src="https://img.shields.io/badge/Telegram-Mini_App-111827?style=for-the-badge&logo=telegram" alt="Telegram Mini App" />
-  <img src="https://img.shields.io/badge/Data-Offline_First-166534?style=for-the-badge" alt="Offline First" />
+  <img src="https://img.shields.io/github/actions/workflow/status/miumilt/BillFlow-Subscribe-Tracker/ci.yml?branch=main&style=for-the-badge&label=CI" alt="CI" />
+  <img src="https://img.shields.io/badge/React-18-0f172a?style=for-the-badge&logo=react" alt="React" />
+  <img src="https://img.shields.io/badge/TypeScript-5-0f172a?style=for-the-badge&logo=typescript" alt="TypeScript" />
+  <img src="https://img.shields.io/badge/Vite-5-0f172a?style=for-the-badge&logo=vite" alt="Vite" />
+  <img src="https://img.shields.io/badge/Tailwind-3.4-0f172a?style=for-the-badge&logo=tailwindcss" alt="Tailwind" />
+  <img src="https://img.shields.io/badge/Telegram-Mini_App-0f172a?style=for-the-badge&logo=telegram" alt="Telegram" />
+  <img src="https://img.shields.io/badge/Data-Offline_First-14532d?style=for-the-badge" alt="Offline First" />
 </p>
 
 </div>
 
----
-
-## Demo
-
-- Live demo URL: add your deployed link here.
-- Local desktop preview: `npm run dev`.
-- Production build: `npm run build`.
+## Product Preview
 
 <p align="center">
-  <img src="trc1.gif1" width="400"> <img src="trc2.gif2" width="400">
+  <img src="./gif1.gif" alt="BillFlow Mobile Flow" width="48%" />
+  <img src="./gif2.gif" alt="BillFlow Dashboard Flow" width="48%" />
 </p>
 
-### Mobile Flow
+## What Makes This Portfolio Strong
 
-Use your own screenshots in `./media/` and reference them here.
+- Full product flow, not a static landing page.
+- Modern visual system with glass layers, gradients, and motion.
+- Real interaction model: create, edit, pause, resume, and delete subscriptions.
+- Dashboard widgets that react to current subscription data.
+- Offline-first behavior for instant showcase without backend setup.
+- Optional Supabase path preserved for production-like architecture.
 
-```md
-![Mobile flow](./media/mobile-flow.png)
-![Dashboard widgets](./media/dashboard-widgets.png)
+## Feature Snapshot
+
+| Area | Included |
+|---|---|
+| Dashboard | Spend momentum, renewal trend, health score, largest plan widgets |
+| Subscriptions | Add, update status, delete with contextual actions |
+| Analytics | Category and billing cycle chart views |
+| UX | Search, filters, smooth transitions, loading skeletons |
+| Data | Local persistence by default, Supabase-ready structure |
+| Platform | Telegram Mini App launch + browser desktop preview |
+
+## Data Strategy
+
+BillFlow works out of the box in portfolio mode.
+
+- Default mode: local persistence (`localStorage`).
+- Supabase mode: enabled automatically when env keys are provided.
+- You can force local mode with `VITE_FORCE_LOCAL_DATA=true`.
+
+```mermaid
+flowchart LR
+    A[App boot] --> B{Supabase env exists?}
+    B -->|No| C[Use localData.ts]
+    B -->|Yes| D[Use supabase.ts]
+    C --> E[Persist in localStorage]
+    D --> F[Persist in Supabase]
 ```
 
----
+## Architecture Flow
 
-## Features
+1. Telegram context and launch behavior are initialized in `src/hooks/useTelegram.ts`.
+2. Subscription operations are handled in `src/hooks/useSubscriptions.ts`.
+3. Dashboard metrics and widget calculations are handled in `src/hooks/useDashboard.ts`.
+4. Data mode is selected in `src/lib/dataMode.ts`.
+5. Persistence implementations live in `src/lib/localData.ts` and `src/lib/supabase.ts`.
 
-### Product Experience
+## Tech Stack
 
-- Widget-driven dashboard with health score, momentum trend, largest plan, and renewal cards.
-- Subscription CRUD with smooth micro-interactions and contextual actions.
-- Analytics view with category and billing-cycle charts.
-- Responsive layout optimized for Telegram mobile viewport.
+- React 18 + TypeScript
+- Vite 5
+- Tailwind CSS 3.4
+- React Query
+- React Hook Form + Zod
+- Recharts
+- Vitest + Playwright
+- Telegram WebApp SDK
 
-### Data Layer
+## Quick Start
 
-- Offline-first storage via local persistence (`localStorage`).
-- No backend required for full demo functionality.
-- Optional Supabase mode remains available for real backend usage.
-
-### UX and Motion
-
-- Green neon visual system with glass cards and gradient controls.
-- Staggered entrances, shimmer skeletons, and interaction feedback.
-- Touch-first navigation with polished bottom app bar.
-
----
-
-## What This Portfolio Project Demonstrates
-
-- Building a complete Telegram Mini App instead of a static showcase page.
-- Structuring code by features, hooks, and shared UI primitives.
-- Designing and shipping an offline-capable product flow end to end.
-- Keeping backend integration optional while preserving production-ready architecture.
-
----
-
-## Architecture
-
-High-level flow:
-
-1. App shell initializes Telegram WebApp context in `src/hooks/useTelegram.ts`.
-2. Subscription and category operations are handled through `src/hooks/useSubscriptions.ts`.
-3. Dashboard aggregates are calculated in `src/hooks/useDashboard.ts`.
-4. Data mode is resolved in `src/lib/dataMode.ts`.
-5. In offline mode, persistence is handled in `src/lib/localData.ts`.
-
-### Data Modes
-
-| Mode | Trigger | Storage | Notes |
-|---|---|---|---|
-| Offline-first (default) | Missing Supabase env or `VITE_FORCE_LOCAL_DATA=true` | `localStorage` | Full app works without backend |
-| Supabase | Valid Supabase env present | Supabase DB | Optional production backend mode |
-
----
-
-## Project Structure
-
-```text
-newminiapp/
-  public/
-  src/
-    components/
-      layout/
-      loading/
-      ui/
-    features/
-      analytics/
-      dashboard/
-      subscriptions/
-    hooks/
-      useDashboard.ts
-      useSubscriptions.ts
-      useTelegram.ts
-    lib/
-      dataMode.ts
-      localData.ts
-      supabase.ts
-      utils.ts
-    types/
-      index.ts
-    App.tsx
-    index.css
-    main.tsx
-  supabase/
-    migrations/
-    functions/
-  README.md
+```bash
+npm install
+npm run dev
 ```
 
----
+Build for production:
+
+```bash
+npm run build
+```
+
+Run checks:
+
+```bash
+npm run lint
+npm run typecheck
+npm test -- --coverage
+```
 
 ## Environment
 
@@ -133,7 +108,7 @@ Create `.env` from `.env.example`.
 cp .env.example .env
 ```
 
-PowerShell alternative:
+PowerShell:
 
 ```powershell
 Copy-Item .env.example .env
@@ -148,61 +123,55 @@ VITE_BOT_TOKEN=
 VITE_FORCE_LOCAL_DATA=false
 ```
 
-If Supabase keys are empty, the app runs in offline-first mode automatically.
-
----
-
-## Run Locally
-
-```bash
-npm install
-npm run dev
-```
-
-## Typecheck
-
-```bash
-npm run typecheck
-```
-
-## Production Build
-
-```bash
-npm run build
-```
-
-Build output is generated in `dist/`.
-
----
-
-## Telegram Mini App Setup (Quick)
+## Telegram Mini App Setup
 
 1. Create a bot via [@BotFather](https://t.me/botfather).
-2. Configure the Web App URL (deployed site or local tunnel URL).
+2. Set your Web App URL to deployed app URL or local tunnel URL.
 3. Open the bot and launch the mini app.
-4. For pure portfolio usage, keep offline-first mode enabled.
-
----
+4. For portfolio demos, keep offline-first mode enabled.
 
 ## Scripts
 
-- `npm run dev` - start Vite dev server.
-- `npm run build` - TypeScript check + production build.
-- `npm run preview` - preview production build locally.
-- `npm run typecheck` - strict TypeScript checks.
-- `npm run test` - unit tests (Vitest).
-- `npm run test:e2e` - end-to-end tests (Playwright).
-- `npm run lint` - ESLint.
+- `npm run dev` - start local development server.
+- `npm run build` - compile TypeScript and create `dist/`.
+- `npm run preview` - preview production build.
+- `npm run lint` - run ESLint.
+- `npm run typecheck` - run TypeScript checks.
+- `npm run test` - run unit tests with Vitest.
+- `npm run test:e2e` - run Playwright e2e tests.
 
----
+## Project Structure
+
+```text
+newminiapp/
+  .github/workflows/
+  e2e/
+  src/
+    components/
+      layout/
+      loading/
+      ui/
+    features/
+      analytics/
+      dashboard/
+      subscriptions/
+    hooks/
+    lib/
+    test/
+    types/
+  supabase/
+    functions/
+    migrations/
+  gif1.gif
+  gif2.gif
+  README.md
+```
 
 ## Notes
 
-- `dist/` should be regenerated after UI/code changes before deployment.
-- Offline mode is ideal for demos, portfolio reviews, and no-backend showcases.
-- Supabase is optional here and not required for core UX demonstration.
-
----
+- `dist/`, `node_modules/`, and `coverage/` are excluded from Git.
+- This repository is optimized for visual portfolio impact and product-level UX.
+- Supabase integration is optional and can be connected later without restructuring.
 
 ## License
 
