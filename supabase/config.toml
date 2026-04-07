@@ -1,0 +1,39 @@
+version = 1
+
+[project]
+id = "billflow"
+name = "BillFlow"
+
+[api]
+enabled = true
+port = 54321
+
+[db]
+port = 54322
+shadow_port = 54320
+major_version = 15
+
+[studio]
+enabled = true
+port = 54323
+
+[inbucket]
+enabled = true
+port = 54324
+
+[auth]
+enabled = true
+site_url = "https://localhost:3000"
+
+[storage]
+enabled = true
+
+[edge_runtime]
+enabled = true
+
+[functions]
+[functions.telegram-auth]
+verify_jwt = false
+
+[functions.send-reminders]
+verify_jwt = false
