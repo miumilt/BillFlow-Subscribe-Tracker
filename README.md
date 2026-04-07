@@ -23,6 +23,10 @@ Telegram Mini App portfolio project for subscription tracking with a polished gr
 - Local desktop preview: `npm run dev`.
 - Production build: `npm run build`.
 
+<p align="center">
+  <img src="trc1.gif1" width="400"> <img src="trc2.gif2" width="400">
+</p>
+
 ### Mobile Flow
 
 Use your own screenshots in `./media/` and reference them here.
