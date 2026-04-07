@@ -2,11 +2,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { format } from 'date-fns'
-import { X } from 'lucide-react'
-import { Card, CardContent, CardHeader, CardTitle } from '@components/ui/card'
-import { Button } from '@components/ui/button'
-import { Input } from '@components/ui/input'
-import { Select, SelectOption } from '@components/ui/select'
+import { ChevronDown, X } from 'lucide-react'
 import { useSubscriptions, useCategories } from '@hooks/useSubscriptions'
 import { useTelegramAuth } from '@hooks/useTelegram'
 import { BILLING_CYCLES, CURRENCIES, getNextPaymentDate } from '@lib/utils'
@@ -33,11 +29,12 @@ interface SubscriptionFormProps {
   onCancel: () => void
 }
 
+const fieldCls = 'input-field w-full rounded-xl px-4 py-3 text-sm transition-all focus:outline-none'
+
 export function SubscriptionForm({ subscription, onSuccess, onCancel }: SubscriptionFormProps) {
   const { createSubscription, updateSubscription } = useSubscriptions()
   const { categories } = useCategories()
   const { webApp } = useTelegramAuth()
-
   const isEditing = !!subscription
 
   const {
@@ -70,201 +67,239 @@ export function SubscriptionForm({ subscription, onSuccess, onCancel }: Subscrip
 
   const watchedStartDate = watch('start_date')
   const watchedBillingCycle = watch('billing_cycle')
+  const watchedActive = watch('is_active')
 
   const onSubmit = async (data: SubscriptionFormData) => {
     try {
-      const nextPaymentDate = getNextPaymentDate(
-        data.start_date,
-        data.billing_cycle
-      ).toISOString()
+      const nextPaymentDate = getNextPaymentDate(data.start_date, data.billing_cycle).toISOString()
+      const normalizedData = {
+        ...data,
+        description: data.description || null,
+        category_id: data.category_id || null,
+        provider_url: data.provider_url || null,
+        notes: data.notes || null,
+      }
 
       if (isEditing && subscription) {
         await updateSubscription({
           id: subscription.id,
-          updates: {
-            ...data,
-            next_payment_date: nextPaymentDate,
-          },
+          updates: { ...normalizedData, next_payment_date: nextPaymentDate },
         })
       } else {
-        await createSubscription({
-          ...data,
-          next_payment_date: nextPaymentDate,
-        })
+        await createSubscription({ ...normalizedData, next_payment_date: nextPaymentDate })
       }
 
       onSuccess()
-      
-      if (webApp?.MainButton) {
-        webApp.MainButton.hide()
-      }
+      if (webApp?.MainButton) webApp.MainButton.hide()
     } catch (error) {
       console.error('Failed to save subscription:', error)
     }
   }
 
   return (
-    <div className="p-4">
-      <div className="mb-4 flex items-center justify-between">
-        <h1 className="text-xl font-bold">
-          {isEditing ? 'Edit subscription' : 'New subscription'}
-        </h1>
-        <Button variant="ghost" size="icon" onClick={onCancel}>
-          <X className="h-5 w-5" />
-        </Button>
+    <div className="animate-fadeInUp p-4 pb-8">
+      <div className="mb-5 flex items-center justify-between">
+        <div>
+          <h1 className="text-[1.3rem] font-bold tracking-tight text-white">
+            {isEditing ? 'Edit subscription' : 'New subscription'}
+          </h1>
+          <p className="mt-1 text-xs text-slate-500">Fill in the details below.</p>
+        </div>
+
+        <button
+          onClick={onCancel}
+          className="press-effect flex h-10 w-10 items-center justify-center rounded-xl transition-colors"
+          style={{ background: 'rgba(148, 163, 184, 0.1)' }}
+        >
+          <X className="h-5 w-5 text-slate-400" />
+        </button>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Basic info</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <label className="mb-1 block text-sm font-medium">Name</label>
-              <Input
-                {...register('name')}
-                placeholder="Netflix, Spotify, etc."
-                variant={errors.name ? 'error' : 'default'}
+        <Section title="Core details">
+          <Field label="Name" error={errors.name?.message}>
+            <input
+              {...register('name')}
+              placeholder="Netflix, Spotify, Figma..."
+              className={fieldCls}
+            />
+          </Field>
+
+          <Field label="Description (optional)">
+            <input
+              {...register('description')}
+              placeholder="Family, team, or premium tier"
+              className={fieldCls}
+            />
+          </Field>
+
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Cost" error={errors.cost?.message}>
+              <input
+                {...register('cost')}
+                type="number"
+                step="0.01"
+                min="0"
+                placeholder="0.00"
+                className={`${fieldCls} mono`}
               />
-              {errors.name && (
-                <p className="mt-1 text-xs text-destructive">{errors.name.message}</p>
-              )}
-            </div>
+            </Field>
 
-            <div>
-              <label className="mb-1 block text-sm font-medium">Description (optional)</label>
-              <Input
-                {...register('description')}
-                placeholder="Family plan, premium tier, etc."
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="mb-1 block text-sm font-medium">Cost</label>
-                <Input
-                  {...register('cost')}
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  placeholder="0.00"
-                  variant={errors.cost ? 'error' : 'default'}
-                />
-                {errors.cost && (
-                  <p className="mt-1 text-xs text-destructive">{errors.cost.message}</p>
-                )}
-              </div>
-
-              <div>
-                <label className="mb-1 block text-sm font-medium">Currency</label>
-                <Select {...register('currency')}>
+            <Field label="Currency">
+              <div className="relative">
+                <select {...register('currency')} className={`${fieldCls} appearance-none pr-10`}>
                   {Object.entries(CURRENCIES).map(([code, { symbol }]) => (
-                    <SelectOption key={code} value={code}>
+                    <option key={code} value={code}>
                       {symbol} {code}
-                    </SelectOption>
+                    </option>
                   ))}
-                </Select>
+                </select>
+                <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
               </div>
-            </div>
+            </Field>
+          </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="mb-1 block text-sm font-medium">Billing cycle</label>
-                <Select {...register('billing_cycle')}>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Billing cycle">
+              <div className="relative">
+                <select
+                  {...register('billing_cycle')}
+                  className={`${fieldCls} appearance-none pr-10 capitalize`}
+                >
                   {Object.entries(BILLING_CYCLES).map(([value, { label }]) => (
-                    <SelectOption key={value} value={value}>
+                    <option key={value} value={value}>
                       {label}
-                    </SelectOption>
+                    </option>
                   ))}
-                </Select>
+                </select>
+                <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
               </div>
+            </Field>
 
-              <div>
-                <label className="mb-1 block text-sm font-medium">Start date</label>
-                <Input {...register('start_date')} type="date" />
-              </div>
+            <Field label="Start date">
+              <input
+                {...register('start_date')}
+                type="date"
+                className={`${fieldCls} [color-scheme:dark]`}
+              />
+            </Field>
+          </div>
+
+          {watchedStartDate && watchedBillingCycle && (
+            <div className="glass-card-subtle rounded-xl px-4 py-3 text-sm">
+              <span className="text-slate-400">Next payment </span>
+              <span className="font-semibold text-white">
+                {format(getNextPaymentDate(watchedStartDate, watchedBillingCycle), 'PPP')}
+              </span>
             </div>
+          )}
+        </Section>
 
-            {watchedStartDate && watchedBillingCycle && (
-              <p className="text-sm text-muted-foreground">
-                Next payment:{' '}
-                {format(
-                  getNextPaymentDate(watchedStartDate, watchedBillingCycle),
-                  'PPP'
-                )}
-              </p>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Category & details</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <label className="mb-1 block text-sm font-medium">Category</label>
-              <Select {...register('category_id')}>
-                <SelectOption value="">No category</SelectOption>
+        <Section title="Extra settings">
+          <Field label="Category">
+            <div className="relative">
+              <select {...register('category_id')} className={`${fieldCls} appearance-none pr-10`}>
+                <option value="">No category</option>
                 {categories?.map((cat) => (
-                  <SelectOption key={cat.id} value={cat.id}>
+                  <option key={cat.id} value={cat.id}>
                     {cat.name}
-                  </SelectOption>
+                  </option>
                 ))}
-              </Select>
+              </select>
+              <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             </div>
+          </Field>
 
-            <div>
-              <label className="mb-1 block text-sm font-medium">
-                Provider URL (optional)
-              </label>
-              <Input
-                {...register('provider_url')}
-                type="url"
-                placeholder="https://..."
-                variant={errors.provider_url ? 'error' : 'default'}
-              />
-              {errors.provider_url && (
-                <p className="mt-1 text-xs text-destructive">{errors.provider_url.message}</p>
-              )}
-            </div>
+          <Field label="Provider URL (optional)" error={errors.provider_url?.message}>
+            <input
+              {...register('provider_url')}
+              type="url"
+              placeholder="https://..."
+              className={fieldCls}
+            />
+          </Field>
 
-            <div>
-              <label className="mb-1 block text-sm font-medium">Notes (optional)</label>
-              <textarea
-                {...register('notes')}
-                rows={3}
-                className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                placeholder="Any additional information..."
-              />
-            </div>
+          <Field label="Notes (optional)">
+            <textarea
+              {...register('notes')}
+              rows={3}
+              placeholder="Any context for future you"
+              className={`${fieldCls} min-h-[90px] resize-none`}
+            />
+          </Field>
 
-            {isEditing && (
-              <div className="flex items-center gap-2">
+          {isEditing && (
+            <label className="glass-card-subtle flex cursor-pointer items-center justify-between rounded-xl px-4 py-3">
+              <span className="text-sm font-medium text-white">Subscription active</span>
+              <div
+                className="relative h-7 w-12 rounded-full transition-all duration-300"
+                style={{
+                  background: watchedActive
+                    ? 'rgba(132, 204, 22, 0.52)'
+                    : 'rgba(148, 163, 184, 0.3)',
+                }}
+              >
                 <input
                   type="checkbox"
-                  id="is_active"
                   {...register('is_active')}
-                  className="h-4 w-4 rounded border-gray-300"
+                  className="absolute inset-0 cursor-pointer opacity-0"
                 />
-                <label htmlFor="is_active" className="text-sm">
-                  Active subscription
-                </label>
+                <span
+                  className="absolute top-0.5 h-6 w-6 rounded-full bg-white shadow-md transition-all duration-300"
+                  style={{ left: watchedActive ? '1.6rem' : '0.15rem' }}
+                />
               </div>
-            )}
-          </CardContent>
-        </Card>
+            </label>
+          )}
+        </Section>
 
-        <div className="flex gap-2">
-          <Button type="button" variant="outline" onClick={onCancel} className="flex-1">
+        <div className="grid grid-cols-2 gap-3 pt-2">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="btn-secondary press-effect rounded-2xl py-3.5 text-sm font-semibold"
+          >
             Cancel
-          </Button>
-          <Button type="submit" disabled={isSubmitting} className="flex-1">
+          </button>
+
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="btn-primary press-effect rounded-2xl py-3.5 text-sm font-semibold disabled:opacity-60"
+          >
             {isSubmitting ? 'Saving...' : isEditing ? 'Update' : 'Create'}
-          </Button>
+          </button>
         </div>
       </form>
+    </div>
+  )
+}
+
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section className="glass-card rounded-2xl p-5">
+      <p className="mb-4 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+        {title}
+      </p>
+      <div className="space-y-4">{children}</div>
+    </section>
+  )
+}
+
+function Field({
+  label,
+  error,
+  children,
+}: {
+  label: string
+  error?: string
+  children: React.ReactNode
+}) {
+  return (
+    <div>
+      <label className="mb-2 block text-sm font-medium text-slate-300">{label}</label>
+      {children}
+      {error && <p className="mt-1.5 text-xs text-red-400">{error}</p>}
     </div>
   )
 }

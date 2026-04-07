@@ -1,30 +1,58 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@lib/supabase'
-import type { Subscription, SubscriptionWithCategory, Category } from '@types'
+import { LOCAL_DATA_MODE } from '@lib/dataMode'
+import {
+  createLocalCategory,
+  createLocalSubscription,
+  deleteLocalSubscription,
+  readLocalCategories,
+  readLocalSubscriptions,
+  updateLocalSubscription,
+} from '@lib/localData'
+import type {
+  Category,
+  CreateSubscriptionInput,
+  Subscription,
+  SubscriptionWithCategory,
+} from '@types'
 
 const SUBSCRIPTIONS_KEY = 'subscriptions'
 
 export function useSubscriptions() {
   const queryClient = useQueryClient()
 
-  const { data: subscriptions, isLoading, error } = useQuery({
+  const {
+    data: subscriptions,
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: [SUBSCRIPTIONS_KEY],
     queryFn: async (): Promise<SubscriptionWithCategory[]> => {
+      if (LOCAL_DATA_MODE) {
+        return readLocalSubscriptions()
+      }
+
       const { data, error } = await supabase
         .from('subscriptions')
-        .select(`
+        .select(
+          `
           *,
           category:categories (*)
-        `)
+        `
+        )
         .order('next_payment_date', { ascending: true })
 
       if (error) throw error
-      return data || []
+      return (data as SubscriptionWithCategory[]) || []
     },
   })
 
   const createSubscription = useMutation({
-    mutationFn: async (subscription: Omit<Subscription, 'id' | 'created_at' | 'updated_at' | 'user_id'>) => {
+    mutationFn: async (subscription: CreateSubscriptionInput) => {
+      if (LOCAL_DATA_MODE) {
+        return createLocalSubscription(subscription)
+      }
+
       const { data: userData } = await supabase.auth.getUser()
       if (!userData.user) throw new Error('Not authenticated')
 
@@ -33,7 +61,7 @@ export function useSubscriptions() {
         .insert({
           ...subscription,
           user_id: userData.user.id,
-        })
+        } as never)
         .select('*, category:categories(*)')
         .single()
 
@@ -42,11 +70,18 @@ export function useSubscriptions() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [SUBSCRIPTIONS_KEY] })
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] })
     },
   })
 
   const updateSubscription = useMutation({
     mutationFn: async ({ id, updates }: { id: string; updates: Partial<Subscription> }) => {
+      if (LOCAL_DATA_MODE) {
+        const updated = updateLocalSubscription({ id, updates })
+        if (!updated) throw new Error('Subscription not found')
+        return updated
+      }
+
       const { data, error } = await supabase
         .from('subscriptions')
         .update({ ...updates, updated_at: new Date().toISOString() })
@@ -59,20 +94,24 @@ export function useSubscriptions() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [SUBSCRIPTIONS_KEY] })
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] })
     },
   })
 
   const deleteSubscription = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('subscriptions')
-        .delete()
-        .eq('id', id)
+      if (LOCAL_DATA_MODE) {
+        deleteLocalSubscription(id)
+        return
+      }
+
+      const { error } = await supabase.from('subscriptions').delete().eq('id', id)
 
       if (error) throw error
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [SUBSCRIPTIONS_KEY] })
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] })
     },
   })
 
@@ -95,6 +134,10 @@ export function useCategories() {
   const { data: categories, isLoading } = useQuery({
     queryKey: ['categories'],
     queryFn: async (): Promise<Category[]> => {
+      if (LOCAL_DATA_MODE) {
+        return readLocalCategories()
+      }
+
       const { data, error } = await supabase
         .from('categories')
         .select('*')
@@ -107,6 +150,10 @@ export function useCategories() {
 
   const createCategory = useMutation({
     mutationFn: async (category: Omit<Category, 'id' | 'created_at' | 'user_id'>) => {
+      if (LOCAL_DATA_MODE) {
+        return createLocalCategory(category)
+      }
+
       const { data: userData } = await supabase.auth.getUser()
       if (!userData.user) throw new Error('Not authenticated')
 
@@ -115,7 +162,7 @@ export function useCategories() {
         .insert({
           ...category,
           user_id: userData.user.id,
-        })
+        } as never)
         .select()
         .single()
 
@@ -124,6 +171,8 @@ export function useCategories() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['categories'] })
+      queryClient.invalidateQueries({ queryKey: [SUBSCRIPTIONS_KEY] })
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] })
     },
   })
 

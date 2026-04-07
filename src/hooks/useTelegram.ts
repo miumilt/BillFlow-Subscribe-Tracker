@@ -1,12 +1,10 @@
 import { useEffect, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@lib/supabase'
+import { LOCAL_DATA_MODE } from '@lib/dataMode'
 import type { User } from '@types'
 
-// Development mode flag - true when running locally without Supabase config
-const DEV_MODE = import.meta.env.DEV && (!import.meta.env.VITE_SUPABASE_URL || import.meta.env.VITE_SUPABASE_URL === '')
-
-// Mock user for development mode
+// Mock user for standalone/local mode
 const MOCK_USER: User = {
   id: 'dev-user-123',
   telegram_id: 123456789,
@@ -79,25 +77,22 @@ const BOT_TOKEN = import.meta.env.VITE_BOT_TOKEN
 
 async function validateTelegramData(initData: string): Promise<boolean> {
   if (!BOT_TOKEN) return true
-  
+
   try {
     const params = new URLSearchParams(initData)
     const hash = params.get('hash')
     if (!hash) return false
 
     params.delete('hash')
-    
+
     const dataCheckString = Array.from(params.keys())
       .sort()
-      .map(key => `${key}=${params.get(key)}`)
+      .map((key) => `${key}=${params.get(key)}`)
       .join('\n')
 
     const encoder = new TextEncoder()
-    const secretKey = await crypto.subtle.digest(
-      'SHA-256',
-      encoder.encode(BOT_TOKEN)
-    )
-    
+    const secretKey = await crypto.subtle.digest('SHA-256', encoder.encode(BOT_TOKEN))
+
     const key = await crypto.subtle.importKey(
       'raw',
       secretKey,
@@ -105,17 +100,13 @@ async function validateTelegramData(initData: string): Promise<boolean> {
       false,
       ['sign']
     )
-    
-    const signature = await crypto.subtle.sign(
-      'HMAC',
-      key,
-      encoder.encode(dataCheckString)
-    )
-    
+
+    const signature = await crypto.subtle.sign('HMAC', key, encoder.encode(dataCheckString))
+
     const computedHash = Array.from(new Uint8Array(signature))
-      .map(b => b.toString(16).padStart(2, '0'))
+      .map((b) => b.toString(16).padStart(2, '0'))
       .join('')
-    
+
     return computedHash === hash
   } catch (error) {
     console.error('Validation error:', error)
@@ -138,12 +129,22 @@ export function useTelegramAuth() {
 
       document.documentElement.style.setProperty('--tg-theme-bg-color', tg.themeParams.bg_color)
       document.documentElement.style.setProperty('--tg-theme-text-color', tg.themeParams.text_color)
-      document.documentElement.style.setProperty('--tg-theme-button-color', tg.themeParams.button_color)
-      document.documentElement.style.setProperty('--tg-theme-button-text-color', tg.themeParams.button_text_color)
+      document.documentElement.style.setProperty(
+        '--tg-theme-button-color',
+        tg.themeParams.button_color
+      )
+      document.documentElement.style.setProperty(
+        '--tg-theme-button-text-color',
+        tg.themeParams.button_text_color
+      )
     }
   }, [])
 
-  const { data: user, isLoading, error } = useQuery({
+  const {
+    data: user,
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ['user'],
     queryFn: async (): Promise<User | null> => {
       if (!webApp?.initData) return null
@@ -163,13 +164,13 @@ export function useTelegramAuth() {
           photo_url: tgUser.photo_url || null,
           auth_date: webApp.initDataUnsafe.auth_date,
           hash: webApp.initDataUnsafe.hash,
-        }
+        },
       })
 
       if (signInError) throw signInError
       return data?.user || null
     },
-    enabled: !!webApp?.initData,
+    enabled: !LOCAL_DATA_MODE && !!webApp?.initData,
     staleTime: 5 * 60 * 1000,
   })
 
@@ -185,7 +186,7 @@ export function useTelegramAuth() {
   const updateUser = useMutation({
     mutationFn: async (updates: Partial<User>) => {
       if (!user) throw new Error('No user logged in')
-      
+
       const { data, error } = await supabase
         .from('users')
         .update(updates)
@@ -203,10 +204,10 @@ export function useTelegramAuth() {
 
   return {
     webApp,
-    user: DEV_MODE ? MOCK_USER : user,
-    isLoading: DEV_MODE ? false : isLoading,
-    error: DEV_MODE ? null : error,
-    isReady: DEV_MODE ? true : isReady,
+    user: LOCAL_DATA_MODE ? MOCK_USER : user,
+    isLoading: LOCAL_DATA_MODE ? false : isLoading,
+    error: LOCAL_DATA_MODE ? null : error,
+    isReady: LOCAL_DATA_MODE ? true : isReady,
     logout: logout.mutate,
     updateUser: updateUser.mutate,
   }

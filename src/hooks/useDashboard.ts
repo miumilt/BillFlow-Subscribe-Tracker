@@ -1,5 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@lib/supabase'
+import { LOCAL_DATA_MODE } from '@lib/dataMode'
+import { readLocalSubscriptions } from '@lib/localData'
 import { calculateMonthlyCost, calculateYearlyCost } from '@lib/utils'
 import type { DashboardStats, SubscriptionWithCategory } from '@types'
 
@@ -7,18 +9,12 @@ export function useDashboardStats() {
   return useQuery({
     queryKey: ['dashboard-stats'],
     queryFn: async (): Promise<DashboardStats> => {
-      const { data: subscriptions, error } = await supabase
-        .from('subscriptions')
-        .select(`
-          *,
-          category:categories (*)
-        `)
-        .eq('is_active', true)
-
-      if (error) throw error
+      const subscriptions = LOCAL_DATA_MODE
+        ? readLocalSubscriptions().filter((item) => item.is_active)
+        : await fetchRemoteActiveSubscriptions()
 
       const subs = subscriptions || []
-      
+
       let totalMonthly = 0
       let totalYearly = 0
       const byCategory = new Map()
@@ -26,7 +22,7 @@ export function useDashboardStats() {
       subs.forEach((sub: SubscriptionWithCategory) => {
         const monthly = calculateMonthlyCost(sub.cost, sub.billing_cycle)
         const yearly = calculateYearlyCost(sub.cost, sub.billing_cycle)
-        
+
         totalMonthly += monthly
         totalYearly += yearly
 
@@ -45,14 +41,15 @@ export function useDashboardStats() {
 
       const now = new Date()
       const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)
-      
+
       const upcomingRenewals = subs
         .filter((sub: SubscriptionWithCategory) => {
           const nextDate = new Date(sub.next_payment_date)
           return nextDate <= thirtyDaysFromNow && sub.is_active
         })
-        .sort((a: SubscriptionWithCategory, b: SubscriptionWithCategory) => 
-          new Date(a.next_payment_date).getTime() - new Date(b.next_payment_date).getTime()
+        .sort(
+          (a: SubscriptionWithCategory, b: SubscriptionWithCategory) =>
+            new Date(a.next_payment_date).getTime() - new Date(b.next_payment_date).getTime()
         )
         .slice(0, 5)
 
@@ -66,4 +63,19 @@ export function useDashboardStats() {
       }
     },
   })
+}
+
+async function fetchRemoteActiveSubscriptions() {
+  const { data, error } = await supabase
+    .from('subscriptions')
+    .select(
+      `
+          *,
+          category:categories (*)
+        `
+    )
+    .eq('is_active', true)
+
+  if (error) throw error
+  return (data || []) as SubscriptionWithCategory[]
 }

@@ -14,29 +14,58 @@ const navItems = [
 
 export function BottomNav({ currentScreen, onNavigate }: BottomNavProps) {
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t bg-background px-4 pb-safe">
-      <div className="flex items-center justify-around py-2">
+    <div
+      className="fixed bottom-0 left-0 right-0 z-50 flex justify-center px-4 pb-6 pt-2"
+      style={{
+        background: 'linear-gradient(to top, rgba(6, 10, 8, 0.98) 30%, rgba(6, 10, 8, 0) 100%)',
+        pointerEvents: 'none',
+      }}
+    >
+      <nav
+        className="nav-pill flex w-full max-w-sm items-center gap-1 rounded-[1.75rem] p-1.5"
+        style={{ pointerEvents: 'auto' }}
+      >
         {navItems.map((item) => {
           const Icon = item.icon
           const isActive = currentScreen === item.id
-          
+
           return (
             <button
               key={item.id}
               onClick={() => onNavigate(item.id as 'dashboard' | 'subscriptions' | 'analytics')}
               className={cn(
-                'flex flex-col items-center gap-1 rounded-lg px-4 py-2 transition-colors',
-                isActive
-                  ? 'text-primary'
-                  : 'text-muted-foreground hover:text-foreground'
+                'nav-pill-item relative flex flex-1 items-center justify-center gap-1.5 rounded-2xl px-3 py-3 text-sm',
+                isActive ? 'active text-lime-50' : 'text-lime-100/50'
               )}
             >
-              <Icon className={cn('h-5 w-5', isActive && 'fill-current')} />
-              <span className="text-xs font-medium">{item.label}</span>
+              <div className="relative z-10 flex flex-col items-center gap-1">
+                <Icon
+                  className="h-[20px] w-[20px] transition-all duration-300"
+                  strokeWidth={isActive ? 2.5 : 2}
+                />
+                <span
+                  className={cn(
+                    'text-[11px] font-semibold transition-all duration-300',
+                    isActive ? 'text-lime-50' : 'text-lime-100/45'
+                  )}
+                >
+                  {item.label}
+                </span>
+              </div>
+
+              {isActive && (
+                <div
+                  className="absolute -bottom-1 left-1/2 h-1 w-8 -translate-x-1/2 rounded-full"
+                  style={{
+                    background: 'rgba(217,249,157,0.94)',
+                    boxShadow: '0 0 10px rgba(190,242,100,0.65)',
+                  }}
+                />
+              )}
             </button>
           )
         })}
-      </div>
-    </nav>
+      </nav>
+    </div>
   )
 }

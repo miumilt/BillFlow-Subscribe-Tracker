@@ -17,25 +17,26 @@ export function App() {
   const [editingSubscription, setEditingSubscription] = useState<Subscription | null>(null)
 
   useEffect(() => {
-    if (window.Telegram?.WebApp) {
-      const tg = window.Telegram.WebApp
-      
-      if (currentScreen === 'dashboard') {
-        tg.BackButton.hide()
-      } else {
-        tg.BackButton.show()
-        tg.BackButton.onClick(() => {
-          if (currentScreen === 'add' || currentScreen === 'edit') {
-            setCurrentScreen('subscriptions')
-          } else {
-            setCurrentScreen('dashboard')
-          }
-        })
-      }
+    if (!window.Telegram?.WebApp) return
 
-      return () => {
-        tg.BackButton.offClick(() => {})
+    const tg = window.Telegram.WebApp
+    const handleBack = () => {
+      if (currentScreen === 'add' || currentScreen === 'edit') {
+        setCurrentScreen('subscriptions')
+      } else {
+        setCurrentScreen('dashboard')
       }
+    }
+
+    if (currentScreen === 'dashboard') {
+      tg.BackButton.hide()
+    } else {
+      tg.BackButton.show()
+      tg.BackButton.onClick(handleBack)
+    }
+
+    return () => {
+      tg.BackButton.offClick(handleBack)
     }
   }, [currentScreen])
 
@@ -60,7 +61,7 @@ export function App() {
 
   if (!user) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background p-4">
+      <div className="app-shell flex min-h-screen items-center justify-center bg-background p-4">
         <div className="text-center">
           <h1 className="mb-2 text-2xl font-bold">BillFlow</h1>
           <p className="text-muted-foreground">Please open this app via Telegram</p>
@@ -74,12 +75,7 @@ export function App() {
       case 'dashboard':
         return <Dashboard onAddClick={handleAdd} />
       case 'subscriptions':
-        return (
-          <SubscriptionList
-            onEdit={handleEdit}
-            onAdd={handleAdd}
-          />
-        )
+        return <SubscriptionList onEdit={handleEdit} onAdd={handleAdd} />
       case 'analytics':
         return <Analytics />
       case 'add':
@@ -99,10 +95,12 @@ export function App() {
   const showBottomNav = currentScreen !== 'add' && currentScreen !== 'edit'
 
   return (
-    <div className="telegram-mini-app flex min-h-screen flex-col bg-background">
+    <div className="telegram-mini-app app-shell flex min-h-screen flex-col bg-background">
       <Header user={user} />
-      <main className="flex-1 overflow-y-auto pb-20">
-        {renderScreen()}
+      <main className="hide-scrollbar relative z-10 flex-1 overflow-y-auto pb-24">
+        <div key={currentScreen} className="screen-enter">
+          {renderScreen()}
+        </div>
       </main>
       {showBottomNav && (
         <BottomNav

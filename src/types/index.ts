@@ -71,6 +71,15 @@ export interface SubscriptionWithCategory extends Subscription {
   category: Category | null
 }
 
+export type CreateSubscriptionInput = Omit<
+  Subscription,
+  'id' | 'user_id' | 'created_at' | 'updated_at' | 'trial_end_date' | 'cancel_reminder_days' | 'custom_days'
+> & {
+  trial_end_date?: string | null
+  cancel_reminder_days?: number | null
+  custom_days?: number | null
+}
+
 export interface DashboardStats {
   totalMonthly: number
   totalYearly: number

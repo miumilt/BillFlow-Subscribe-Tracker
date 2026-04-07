@@ -1,212 +1,205 @@
+<div align="center">
+
 # BillFlow
 
-[![CI](https://github.com/yourusername/billflow/actions/workflows/ci.yml/badge.svg)](https://github.com/yourusername/billflow/actions/workflows/ci.yml)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue.svg)](https://www.typescriptlang.org/)
-[![React](https://img.shields.io/badge/React-18-61DAFB.svg)](https://reactjs.org/)
-[![Supabase](https://img.shields.io/badge/Supabase-3ECF8E.svg)](https://supabase.io/)
+Telegram Mini App portfolio project for subscription tracking with a polished green dashboard UI, animated widgets, and offline-first persistence.
 
-A production-grade Telegram Mini App for subscription and recurring expenses tracking.
+<p>
+  <img src="https://img.shields.io/badge/React-18-111827?style=for-the-badge&logo=react" alt="React" />
+  <img src="https://img.shields.io/badge/Vite-5-111827?style=for-the-badge&logo=vite" alt="Vite" />
+  <img src="https://img.shields.io/badge/Tailwind-3.4-111827?style=for-the-badge&logo=tailwindcss" alt="Tailwind" />
+  <img src="https://img.shields.io/badge/TypeScript-5-111827?style=for-the-badge&logo=typescript" alt="TypeScript" />
+  <img src="https://img.shields.io/badge/Telegram-Mini_App-111827?style=for-the-badge&logo=telegram" alt="Telegram Mini App" />
+  <img src="https://img.shields.io/badge/Data-Offline_First-166534?style=for-the-badge" alt="Offline First" />
+</p>
 
-## Overview
+</div>
 
-BillFlow helps users track their subscriptions and recurring payments, providing insights into monthly/yearly spending, upcoming renewals, and spending analytics by category.
+---
 
-### Key Features
+## Demo
 
-- **Subscription Management**: Add, edit, and manage all your recurring payments
-- **Dashboard Overview**: Quick view of total monthly/yearly spending
-- **Upcoming Renewals**: See what's coming up in the next 30 days
-- **Category Analytics**: Track spending by category with visual charts
-- **Telegram Integration**: Seamless Mini App experience with Telegram auth
-- **Smart Reminders**: Get notified before payments are due
+- Live demo URL: add your deployed link here.
+- Local desktop preview: `npm run dev`.
+- Production build: `npm run build`.
 
-## Tech Stack
+### Mobile Flow
 
-- **Frontend**: React 18 + TypeScript 5 + Vite
-- **Styling**: Tailwind CSS + class-variance-authority
-- **State Management**: TanStack Query (React Query)
-- **Forms**: React Hook Form + Zod validation
-- **Backend**: Supabase (PostgreSQL + Edge Functions)
-- **Charts**: Recharts
-- **Testing**: Vitest + Playwright
-- **CI/CD**: GitHub Actions
+Use your own screenshots in `./media/` and reference them here.
+
+```md
+![Mobile flow](./media/mobile-flow.png)
+![Dashboard widgets](./media/dashboard-widgets.png)
+```
+
+---
+
+## Features
+
+### Product Experience
+
+- Widget-driven dashboard with health score, momentum trend, largest plan, and renewal cards.
+- Subscription CRUD with smooth micro-interactions and contextual actions.
+- Analytics view with category and billing-cycle charts.
+- Responsive layout optimized for Telegram mobile viewport.
+
+### Data Layer
+
+- Offline-first storage via local persistence (`localStorage`).
+- No backend required for full demo functionality.
+- Optional Supabase mode remains available for real backend usage.
+
+### UX and Motion
+
+- Green neon visual system with glass cards and gradient controls.
+- Staggered entrances, shimmer skeletons, and interaction feedback.
+- Touch-first navigation with polished bottom app bar.
+
+---
+
+## What This Portfolio Project Demonstrates
+
+- Building a complete Telegram Mini App instead of a static showcase page.
+- Structuring code by features, hooks, and shared UI primitives.
+- Designing and shipping an offline-capable product flow end to end.
+- Keeping backend integration optional while preserving production-ready architecture.
+
+---
+
+## Architecture
+
+High-level flow:
+
+1. App shell initializes Telegram WebApp context in `src/hooks/useTelegram.ts`.
+2. Subscription and category operations are handled through `src/hooks/useSubscriptions.ts`.
+3. Dashboard aggregates are calculated in `src/hooks/useDashboard.ts`.
+4. Data mode is resolved in `src/lib/dataMode.ts`.
+5. In offline mode, persistence is handled in `src/lib/localData.ts`.
+
+### Data Modes
+
+| Mode | Trigger | Storage | Notes |
+|---|---|---|---|
+| Offline-first (default) | Missing Supabase env or `VITE_FORCE_LOCAL_DATA=true` | `localStorage` | Full app works without backend |
+| Supabase | Valid Supabase env present | Supabase DB | Optional production backend mode |
+
+---
 
 ## Project Structure
 
-```
-├── src/
-│   ├── components/
-│   │   ├── ui/           # Reusable UI components (Button, Card, etc.)
-│   │   ├── layout/       # Layout components (Header, BottomNav)
-│   │   └── loading/      # Loading states
-│   ├── features/
-│   │   ├── dashboard/    # Dashboard screen
-│   │   ├── subscriptions/# Subscription list & form
-│   │   └── analytics/    # Analytics screen with charts
-│   ├── hooks/
-│   │   ├── useTelegram.ts     # Telegram WebApp integration
-│   │   ├── useSubscriptions.ts # Subscription CRUD
-│   │   └── useDashboard.ts     # Dashboard stats
-│   ├── lib/
-│   │   ├── supabase.ts   # Supabase client
-│   │   ├── database.types.ts   # Generated types
-│   │   └── utils.ts      # Utility functions
-│   ├── types/
-│   │   └── index.ts      # TypeScript types
-│   └── test/
-│       └── setup.ts      # Test setup
-├── supabase/
-│   ├── migrations/       # Database migrations
-│   ├── functions/        # Edge functions
-│   └── config.toml       # Supabase config
-├── e2e/                  # Playwright E2E tests
-├── .github/workflows/    # CI/CD pipelines
-└── docs/                 # Documentation
-
-```
-
-## Quick Start
-
-### Prerequisites
-
-- Node.js 18+
-- npm or yarn
-- Supabase account
-- Telegram Bot (for Mini App)
-
-### Installation
-
-1. Clone the repository:
-```bash
-git clone https://github.com/yourusername/billflow.git
-cd billflow
+```text
+newminiapp/
+  public/
+  src/
+    components/
+      layout/
+      loading/
+      ui/
+    features/
+      analytics/
+      dashboard/
+      subscriptions/
+    hooks/
+      useDashboard.ts
+      useSubscriptions.ts
+      useTelegram.ts
+    lib/
+      dataMode.ts
+      localData.ts
+      supabase.ts
+      utils.ts
+    types/
+      index.ts
+    App.tsx
+    index.css
+    main.tsx
+  supabase/
+    migrations/
+    functions/
+  README.md
 ```
 
-2. Install dependencies:
-```bash
-npm install
-```
+---
 
-3. Set up environment variables:
+## Environment
+
+Create `.env` from `.env.example`.
+
 ```bash
 cp .env.example .env
 ```
 
-Edit `.env` with your Supabase credentials:
-```
-VITE_SUPABASE_URL=your_supabase_url
-VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
-VITE_BOT_TOKEN=your_telegram_bot_token
-```
+PowerShell alternative:
 
-4. Set up Supabase:
-```bash
-# Run migrations in Supabase SQL Editor
-supabase/migrations/001_initial_schema.sql
-supabase/migrations/002_telegram_auth.sql
-supabase/migrations/003_cron_jobs.sql
-
-# Deploy edge functions
-supabase functions deploy telegram-auth
-supabase functions deploy send-reminders
+```powershell
+Copy-Item .env.example .env
 ```
 
-5. Start development server:
-```bash
-npm run dev
+Available variables:
+
+```env
+VITE_SUPABASE_URL=
+VITE_SUPABASE_ANON_KEY=
+VITE_BOT_TOKEN=
+VITE_FORCE_LOCAL_DATA=false
 ```
 
-The app will be available at `http://localhost:3000`
-
-### Setting up Telegram Mini App
-
-1. Create a bot with [@BotFather](https://t.me/botfather)
-2. Enable Web App for your bot
-3. Set the Web App URL to your deployed app (or use ngrok for local development)
-4. Get the bot token and add it to your `.env` file
-
-## Available Scripts
-
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run preview` - Preview production build
-- `npm run test` - Run unit tests
-- `npm run test:e2e` - Run E2E tests
-- `npm run lint` - Run ESLint
-- `npm run lint:fix` - Fix ESLint issues
-- `npm run format` - Format code with Prettier
-- `npm run typecheck` - Run TypeScript type checking
-
-## Architecture Highlights
-
-### Frontend
-
-- **Component Architecture**: Feature-based organization with shared UI components
-- **State Management**: Server state with TanStack Query, local UI state with React hooks
-- **Form Handling**: React Hook Form with Zod for type-safe validation
-- **Styling**: Tailwind with custom design system using CSS variables
-
-### Backend
-
-- **Database**: PostgreSQL with Row Level Security for data isolation
-- **Authentication**: Telegram Mini App initData validation
-- **Edge Functions**: Serverless functions for auth and notifications
-- **Cron Jobs**: Automated subscription date advancement
-
-### Security
-
-- Row Level Security (RLS) on all tables
-- Telegram data validation with HMAC
-- Input validation with Zod schemas
-- Type-safe database queries
-
-## Testing
-
-### Unit Tests (Vitest)
-
-```bash
-npm test
-```
-
-### E2E Tests (Playwright)
-
-```bash
-npm run test:e2e
-```
-
-### Test Coverage
-
-```bash
-npm test -- --coverage
-```
-
-## Deployment
-
-### Vercel (Recommended)
-
-1. Connect your GitHub repo to Vercel
-2. Add environment variables in Vercel dashboard
-3. Deploy automatically on push to main
-
-### Manual Build
-
-```bash
-npm run build
-# Deploy dist/ folder to your hosting provider
-```
-
-## Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## License
-
-MIT License - see [LICENSE](LICENSE) file for details.
+If Supabase keys are empty, the app runs in offline-first mode automatically.
 
 ---
 
-Built with modern technologies for a seamless subscription tracking experience.
+## Run Locally
+
+```bash
+npm install
+npm run dev
+```
+
+## Typecheck
+
+```bash
+npm run typecheck
+```
+
+## Production Build
+
+```bash
+npm run build
+```
+
+Build output is generated in `dist/`.
+
+---
+
+## Telegram Mini App Setup (Quick)
+
+1. Create a bot via [@BotFather](https://t.me/botfather).
+2. Configure the Web App URL (deployed site or local tunnel URL).
+3. Open the bot and launch the mini app.
+4. For pure portfolio usage, keep offline-first mode enabled.
+
+---
+
+## Scripts
+
+- `npm run dev` - start Vite dev server.
+- `npm run build` - TypeScript check + production build.
+- `npm run preview` - preview production build locally.
+- `npm run typecheck` - strict TypeScript checks.
+- `npm run test` - unit tests (Vitest).
+- `npm run test:e2e` - end-to-end tests (Playwright).
+- `npm run lint` - ESLint.
+
+---
+
+## Notes
+
+- `dist/` should be regenerated after UI/code changes before deployment.
+- Offline mode is ideal for demos, portfolio reviews, and no-backend showcases.
+- Supabase is optional here and not required for core UX demonstration.
+
+---
+
+## License
+
+MIT
